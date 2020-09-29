@@ -5,7 +5,7 @@ title = "TechnicalPanda"
 author = "Kevin Oliver"
 copyright = "Copyright © 2008–2018, Steve Francia and the Hugo Authors; all rights reserved."
 # canonifyurls = true
-paginate = 10
+paginate = 11
 theme = "hugo-clarity"
 
 DefaultContentLanguage = "en"
