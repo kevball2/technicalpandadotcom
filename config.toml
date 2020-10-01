@@ -8,7 +8,7 @@ copyright = "Copyright © 2008–2018, Steve Francia and the Hugo Authors; all r
 paginate = 11
 theme = "hugo-clarity"
 
-DefaultContentLanguage = "en"
+#DefaultContentLanguage = "en"
 # [languages]
 # config/_default/languages.toml
 
@@ -87,6 +87,9 @@ enforceLightMode = false
 
 # Text for the languages menu.
 languageMenuName = "🌐"
+
+# Is Multilanguage enabled.
+IsMultiLingual = 0
 
 # Title separator, default to |.
 # titleSeparator = "|"
