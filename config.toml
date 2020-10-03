@@ -8,7 +8,7 @@ copyright = "Copyright © 2008–2018, Steve Francia and the Hugo Authors; all r
 paginate = 11
 theme = "hugo-clarity"
 
-#DefaultContentLanguage = "en"
+DefaultContentLanguage = "en"
 # [languages]
 # config/_default/languages.toml
 
@@ -66,7 +66,7 @@ mainSections = ["post"] # see config details here https://gohugo.io/functions/wh
 # center logo on navbar
 centerLogo = false # Set to "true" for centering or "false" for left aligned.
 
-logo = "logos/logo.png"
+logo = "logos/logo_TP.png"
 
 # Label Non inline images on an article body
 figurePositionShow = false # toggle on or off globally
@@ -88,8 +88,6 @@ enforceLightMode = false
 # Text for the languages menu.
 languageMenuName = "🌐"
 
-# Is Multilanguage enabled.
-IsMultiLingual = 0
 
 # Title separator, default to |.
 # titleSeparator = "|"
