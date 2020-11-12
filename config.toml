@@ -47,6 +47,9 @@ introDescription = "Technologist, perpetual student, teacher, continual incremen
 # Google analytics Id
 ga_analytics = "XXXXXXXXXX"
 
+# app insights id
+ai = "66d49adb-3845-45fd-a9f2-afa6ac081a13"
+
 # limit the number of taxonomies links shown on the sidebar of each page by default.
 numberOfTagsShown = 14 # Applies for all other default & custom taxonomies. e.g categories, brands see https://gohugo.io/content-management/taxonomies#what-is-a-taxonomy
 
