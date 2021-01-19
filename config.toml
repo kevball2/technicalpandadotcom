@@ -1,6 +1,6 @@
 # set `baseurl` to your root domain
 # if you set it to "/" share icons won't work properly on production
-baseurl = "https://ashy-mud-0270b7110.azurestaticapps.net/"  # Include trailing slash
+baseurl = "https://www.technicalpanda.com/"  # Include trailing slash
 title = "TechnicalPanda"
 author = "Kevin Oliver"
 copyright = "Copyright © 2008–2018, Steve Francia and the Hugo Authors; all rights reserved."
