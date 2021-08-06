@@ -1,9 +1,0 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-        <title>Technical talk with a side of panda</title>
-        <link>https://www.technicalpanda.com/</link>
-        <description>Technical talk with a side of panda</description>
-        <generator>Hugo -- gohugo.io</generator><language>en</language>
-            <atom:link href="https://www.technicalpanda.com/index.xml" rel="self" type="application/rss+xml" />
-        </channel>
-</rss>
