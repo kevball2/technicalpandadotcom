@@ -11,10 +11,10 @@
         {{- end }}
       {{- end }}
       {{- if $showAuthorPhoto }}
-        <div class="author_header">
-          <img src="{{ absURL $author.photo }}" alt="{{ $author.name }} photo" width="150" height="150">
-          <h2>{{  $author.name }}</h2>
+        <div class="author_photo">
+          <img src="{{ absURL $author.photo }}" alt="{{ $author.name }} photo" width="300" height="150">
         </div>
+        <h2>{{  if $fullAuthor }}{{ $author.name }}{{ else }}{{ $author }}{{ end }}</h2>  
       {{- else }}
         <h2>{{  if $fullAuthor }}{{ $author.name }}{{ else }}{{ $author }}{{ end }}</h2>
       {{- end }}
