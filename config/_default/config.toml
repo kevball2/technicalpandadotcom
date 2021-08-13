@@ -15,6 +15,11 @@ DefaultContentLanguage = "en"
 # [menus]
 # config/_default/menus/menu.xx.toml
 
+IsMultiLingual = false
+
+
+
+
 [taxonomies]
 category = "categories"
 tag = "tags"
