@@ -20,24 +20,36 @@
   </url><url>
     <loc>https://www.technicalpanda.com/about/</loc>
     <lastmod>2021-01-15T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/about/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/about/"
-                />
   </url><url>
     <loc>https://www.technicalpanda.com/tags/azure/</loc>
+    <lastmod>2021-01-15T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://www.technicalpanda.com/categories/azure/</loc>
     <lastmod>2021-01-15T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://www.technicalpanda.com/tags/blog/</loc>
     <lastmod>2021-01-15T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>https://www.technicalpanda.com/categories/</loc>
+    <lastmod>2021-01-15T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="pt"
+                href="https://www.technicalpanda.com/pt/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://www.technicalpanda.com/categories/"
+                />
+  </url><url>
+    <loc>https://www.technicalpanda.com/tags/featured/</loc>
+    <lastmod>2021-01-15T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://www.technicalpanda.com/tags/github/</loc>
+    <lastmod>2021-01-15T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://www.technicalpanda.com/categories/infra-as-code/</loc>
     <lastmod>2021-01-15T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://www.technicalpanda.com/tags/machine-learning/</loc>
@@ -45,15 +57,18 @@
   </url><url>
     <loc>https://www.technicalpanda.com/post/</loc>
     <lastmod>2021-01-15T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://www.technicalpanda.com/series/</loc>
+    <lastmod>2021-01-15T00:00:00+00:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="pt"
-                href="https://www.technicalpanda.com/pt/post/"
+                href="https://www.technicalpanda.com/pt/series/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://www.technicalpanda.com/post/"
+                href="https://www.technicalpanda.com/series/"
                 />
   </url><url>
     <loc>https://www.technicalpanda.com/tags/</loc>
@@ -72,6 +87,9 @@
     <loc>https://www.technicalpanda.com/post/test-post/</loc>
     <lastmod>2021-01-15T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>https://www.technicalpanda.com/series/themes-guide/</loc>
+    <lastmod>2021-01-15T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://www.technicalpanda.com/tags/hugo/</loc>
     <lastmod>2020-10-03T00:00:00+00:00</lastmod>
   </url><url>
@@ -84,86 +102,17 @@
     <loc>https://www.technicalpanda.com/archives/</loc>
     <lastmod>2019-05-28T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://www.technicalpanda.com/categories/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/categories/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/categories/"
-                />
-  </url><url>
     <loc>https://www.technicalpanda.com/tags/css/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/tags/css/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/tags/css/"
-                />
-  </url><url>
-    <loc>https://www.technicalpanda.com/tags/featured/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://www.technicalpanda.com/tags/html/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/tags/html/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/tags/html/"
-                />
   </url><url>
     <loc>https://www.technicalpanda.com/tags/markdown/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/tags/markdown/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/tags/markdown/"
-                />
   </url><url>
     <loc>https://www.technicalpanda.com/post/markdown-syntax/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/post/markdown-syntax/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/post/markdown-syntax/"
-                />
-  </url><url>
-    <loc>https://www.technicalpanda.com/series/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="pt"
-                href="https://www.technicalpanda.com/pt/series/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://www.technicalpanda.com/series/"
-                />
   </url><url>
     <loc>https://www.technicalpanda.com/categories/syntax/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
@@ -172,9 +121,6 @@
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://www.technicalpanda.com/categories/themes/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://www.technicalpanda.com/series/themes-guide/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://www.technicalpanda.com/tags/privacy/</loc>

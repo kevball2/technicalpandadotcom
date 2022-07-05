@@ -12,4 +12,8 @@ My Name is Kevin Oliver, for most of my IT career I have worked in the trenches 
 
 ## Certifications
 
-<div data-iframe-width="150" data-iframe-height="270" data-share-badge-id="1642f01e-0d0a-41cb-a0d7-28f65ed11ead" data-share-badge-host="https://www.youracclaim.com"></div><script type="text/javascript" async src="//cdn.youracclaim.com/assets/utilities/embed.js"></script> 
+![](/images/certs/microsoft-certified-azure-data-scientist-associate.png "Microsoft Certified Data Scientist")
+![](/images/certs/microsoft-certified-devops-engineer-expert.png "Microsoft Certified DevOps Engineer")
+![](/images/certs/microsoft-certified-azure-administrator-associate.png "Microsoft Certified Azure Administrator")
+![](/images/certs/microsoft-certified-azure-solutions-architect-expert.png "Microsoft Certified Azure Solutions Arcitect")
+
