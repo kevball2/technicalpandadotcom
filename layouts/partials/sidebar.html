@@ -1,6 +1,8 @@
 {{ $s := .Site.Params }}
 <aside class="sidebar">
   <section class="sidebar_inner">
+    <br>
+    {{ partial "search/widget" . }}
     {{- if $s.IntroDescription }}
       {{- $author := $s.Author  }}
       {{- $showAuthorPhoto := false }}
