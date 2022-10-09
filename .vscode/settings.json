@@ -1,2 +1,27 @@
 {
+    "frontMatter.content.publicFolder": "static",
+    "frontMatter.framework.id": "hugo",
+    "frontMatter.taxonomy.tags": [
+        "Hugo",
+        "css",
+        "destacado",
+        "emoji",
+        "featured",
+        "html",
+        "index",
+        "markdown",
+        "privacy",
+        "shortcodes",
+        "temas",
+        "text",
+        "themes"
+    ],
+    "frontMatter.taxonomy.categories": [
+        "sintaxe",
+        "syntax",
+        "temas",
+        "themes"
+    ],
+    "frontMatter.content.autoUpdateDate": false,
+    "frontMatter.preview.host": "http://localhost:1313/"
 }

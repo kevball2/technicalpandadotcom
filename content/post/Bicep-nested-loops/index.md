@@ -1,11 +1,11 @@
 +++
 author = "Kevin Oliver"
 title = "Nested loops with Azure Bicep"
-date = "2022-30-01"
+date = "2022-30-02"
+draft = true
 description = "Deploying Azure resource with Bicep"
-tags = [
-    "Bicep", "Infrastructure as Code"
-]
+tags = [ "Bicep", "Infrastructure as Code" ]
+lastmod = "2022-10-08T22:33:02.994Z"
 +++
 
 ### Working with nested loops in Azure Bicep
