@@ -22,6 +22,6 @@
         "temas",
         "themes"
     ],
-    "frontMatter.content.autoUpdateDate": true,
+    "frontMatter.content.autoUpdateDate": false,
     "frontMatter.preview.host": "http://localhost:1313/"
 }
