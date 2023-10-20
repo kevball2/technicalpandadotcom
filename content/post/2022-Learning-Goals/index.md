@@ -3,9 +3,8 @@ author = "Kevin Oliver"
 title = "2022 Learning Goals"
 date = "2021-12-1"
 description = "Another turn of the wheel comes to an end..."
-tags = [
-    "Learning", "Goals"
-]
+tags = [ "Learning", "Goals" ]
+draft = true
 +++
 
 With my goals from 2020 still hanging on the wall staring at me shamefully, I am taking the initative to start getting 2022 in order. 
