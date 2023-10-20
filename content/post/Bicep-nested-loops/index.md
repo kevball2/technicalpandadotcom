@@ -46,6 +46,3 @@ The above code will create 3 new resource groups; ResourcegroupName1, Resourcegr
 
 main.bicep
 
-
-
-

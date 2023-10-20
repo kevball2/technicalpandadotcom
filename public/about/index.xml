@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Abouts on TechnicalPanda</title>
+    <link>https://www.technicalpanda.com/about/</link>
+    <description>Recent content in Abouts on TechnicalPanda</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <copyright>Copyright © 2008–2018, Steve Francia and the Hugo Authors; all rights reserved.</copyright>
+    <lastBuildDate>Fri, 15 Jan 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://www.technicalpanda.com/about/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
