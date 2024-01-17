@@ -18,7 +18,7 @@ Before diving into the Bicep template, I want to explain the design of our Bicep
 - Modules - Generalized resource that contain the logic to successfully deploy the resource
 - Templates - Contain the business and security requirements for a deployment
 
-Modules are generalized Bicep files that target an Azure resource (e.g Azure SQL DM, Azure Virtual Machine, Virtual Network). These modules are designed to allow for deployment in multiple configurations without altering the module. These modules are based on the [Azure Resource Modules](https://github.com/Azure/ResourceModules) project. Utilizing a generalized module allows us to abstract away logic and minimize the complexity of the templates used by teams. This helps streamline template creation for customers and IT staff. 
+Modules are generalized Bicep files that target an Azure resource (e.g Azure SQL, Azure Virtual Machine, Virtual Network). These modules are designed to allow for deployment in multiple configurations without altering the module. These are based on the [Azure Resource Modules](https://github.com/Azure/ResourceModules) project. Utilizing a generalized module allows us to abstract away logic and minimize the complexity of the template design by teams.
 
 Here is an example of logic that would be part of module. The Bicep below checks if the template calling this module has passed any Identity properties. 
 ``` Bicep
