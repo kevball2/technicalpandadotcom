@@ -10,20 +10,17 @@ slug: user-defined-types-action
 ---
 
 
-# User Defined Types in Action
-
-After spending a good deal of time working in depth with User Defined Types at the end of 2023, I want to expand the post on the basics of [User Defined Types](../user-define-types/index.md). User Defined Types provide a great new capability as we write Bicep code; it is also a feature that is hard to define it's value until you see it in action. In this post I will walk through an advanced Bicep template I designed to help deploy Azure SQL Databases. This template takes advantage of multiple advanced features and techniques that will bring better understanding and speed to your deployments. 
-
+After spending a good deal of time working in depth with User Defined Types at the end of 2023, I want to expand my previous post on the basics of [User Defined Types](../working-user-defined-types-bicep). User Defined Types provide a great new capability as we write Bicep code; it is also a feature that is hard to define it's value until you see it in action. In this post I will walk through a Bicep template I designed to help deploy Azure SQL Databases. This template takes advantage of multiple advanced features and techniques that will bring better understanding and speed to your deployments.  
 
 ## Template Scope overview
-Before diving into the Bicep template, I want to explain the design of our bicep deployment. There are 2 components to our strategy, modules and templates. 
+Before diving into the Bicep template, I want to explain the design of our Bicep deployment. There are 2 components to our strategy, modules and templates. 
 
 - Modules - Generalized resource that contain the logic to successfully deploy the resource
 - Templates - Contain the business and security requirements for a deployment
 
-Modules are generalized bicep files that target an Azure resource (e.g Azure SQL DM, Azure Virtual Machine, Virtual Network). These modules are designed to allow for deployment in multiple configurations without altering the module. These modules are based on the [Azure Resource Modules](https://github.com/Azure/ResourceModules) project. Utilizing a generalized module allows us to abstract away logic to minimize the complexity of the templates used by teams. This helps to streamline the template that the customer or operations would use. 
+Modules are generalized Bicep files that target an Azure resource (e.g Azure SQL DM, Azure Virtual Machine, Virtual Network). These modules are designed to allow for deployment in multiple configurations without altering the module. These modules are based on the [Azure Resource Modules](https://github.com/Azure/ResourceModules) project. Utilizing a generalized module allows us to abstract away logic and minimize the complexity of the templates used by teams. This helps streamline template creation for customers and IT staff. 
 
-An example would be checking if the deployment is using User Assigned Identities, Managed Identities, or none at all. Here is the logic used by the module: 
+Here is an example of logic that would be part of module. The Bicep below checks if the template calling this module has passed any Identity properties. 
 ``` Bicep
 var formattedUserAssignedIdentities = reduce(map((managedIdentities.?userAssignedResourcesIds ?? []), (id) => { '${id}': {} }), {}, (cur, next) => union(cur, next)) // Converts the flat array to an object like { '${id1}': {}, '${id2}': {} }
 
@@ -34,12 +31,12 @@ var identity = !empty(managedIdentities) ? {
 ```
 This abstraction provides several benefits:
 - Template designers are not required to develop complex logic to manage parameter and variable input.
-- Template parameters can focused on gather environment specific information.
-- Template development can be completed faster and with less complexity. 
+- Template parameters are focused on deployment specific information.
+- Template development speed can be increased. 
 
-The goal of this strategy is to create templates that require minimal complexity to meet the business requirements for the deployment. For example, we have projects that are allowed to host resources with public access, while other projects that have access to on-premise resources are not allowed to have publicly facing resources. The template for public access deployment would have options for public access while the second template would instead require private endpoint parameters. 
+The goal of this strategy is to create templates that require minimal complexity to meet the business requirements for specific deployment scenarios. For example, we have projects that are allowed to host resources with public access, while other projects that have access to on-premise resources are not allowed to have publicly facing resources. The template for public access deployment would have options for public access while the second template would instead require options to ensure traffic is not publicly available.
 
-Here is an example of template that is used to ensure deployments are not publicly enabled: 
+Here is snippet of a template that is used to ensure deployments are not publicly available: 
 ``` Bicep
 module sqlServer '../../modules/sql/server/main.bicep' = {
   name: '${sqlServerName}-dp'
@@ -57,11 +54,11 @@ module sqlServer '../../modules/sql/server/main.bicep' = {
     minimalTlsVersion: '1.2'
 ```
 
-Properties can be hard coded to ensure the template configuration meet security and business requirements. While it is possible for someone to modify the template during a PR, the expectation is that this change be caught during the review. If it was missed during the review, then the Azure Policy for SQL DB would block the deployment. Having layers of validation is crucial to ensuring proper configuration of your deployments.
+Templates can meet security and business requirements by limiting the property options available for the user. With this template a user would not be able to enable public network access through misconfiguration of a parameter file. While it is possible for someone to modify the template directly during a PR, the expectation is that this change will be caught during the PR review. If it was missed during the review, then Azure Policy would block the deployment in our environment. Having layers of validation is crucial to ensuring properly configured resources in your deployments.
 
 ### Template components
 
-Let's review the main components of our [template](https://github.com/kevball2/bicep-samples/blob/feat-initial/samples/user-defined-types/complex/templates/sql/server/main.bicep). 
+Let's review the main components of our [template](https://github.com/kevball2/bicep-samples/blob/main/samples/user-defined-types/complex/templates/sql/server/main.bicep). 
 
 Our template is organized into sections: 
 - User Defined Types
@@ -71,11 +68,11 @@ Our template is organized into sections:
 - Modules
 - Outputs
 
-Defining a good structure for your templates can ensure consistent development across multiple teams. Defining structure, formatting, and naming standards allow for faster development and review. I highly recommend developing a style guide for the creation of templates and modules.
+Defining a good structure for your templates can ensure consistent development across multiple teams. Defining structure, formatting, and naming standards allow for faster development and review. I highly recommend developing a style guide for the creation of templates and modules. For this post we will be focusing on the User Defined Types in our template. 
 
 ## User Defined Types
 
-Our template utilizes several user defined types to improve usability and discovery of parameter requirements. These types are imported from several files using the `compileTimeImports` feature: 
+Our template utilizes several User Defined Types to improve usability and discovery of valid parameter values. These types are imported from several files using the `compileTimeImports` feature: 
 
 ``` Bicep
 import {
@@ -87,10 +84,10 @@ import {
 } from './types/types.bicep'
 ```
 
-Types have been moved to their own files to logically encapsulate a portion of the template they each represent.
+User Defined Types can grow to be quite large. We can move our User Defined Types to separate Bicep files that represent different parts of our template logic. To ensure our main template file does not become difficult to navigate, I have broken out the logic into several files. 1 for the core SQL server, database, and deployment specific types, and 3 for the SQL sku options for the SQL Database. We will learn more about those types later in this post. First lets look at the core User Defined Types.  
 
 ### Azure Environment Type
-The `azureEnvironmentType` contains information specific to our environments and deployments. It provides static information that can be used to dynamically create or complete resources in our template. The `export()` decorator makes the type available for import from another bicep file. 
+The `azureEnvironmentType` contains information specific to our environments and deployments. It provides static information that can be used to dynamically create or complete resources. The `export()` decorator makes the type available for import from another Bicep file. 
 The `sealed()` decorator prevents modification of the property values to avoid alterations in the parameter file. 
 ``` Bicep
 @description('Azure environment specific configuration settings')
@@ -149,15 +146,16 @@ type azureEnvironmentType = {
 }
 ``` 
 
+While this information could also be stored in a variable, providing it as a type allows us to add helpful descriptions for consumers of the template. Providing a re-usable type that can be used to retrieve environment static values ensures consistent resource deployments.   
 
 
-An example of this would be the SQL Server name:
+Here is an example of dynamically creating the SQL Server name based on environment and region information found in the `azureEnvironmentType`:
 
 ``` Bicep
 var sqlServerName = 'sql-${projectName}-${deploymentEnvironment}-${azureEnvironment![environment().name].region[location]}'
 ```
 
-Another example is the private endpoint DNS zone Resource Id:
+Another example of accessing the private endpoint DNS zone Resource Id found in the hub network subscription:
 ``` Bicep
 privateEndpoints: [
       {
@@ -171,10 +169,8 @@ privateEndpoints: [
 ```
 
 
-While this information could also be stored in a variable, providing it as a Type allows us to add helpful descriptions for consumers of the template. The type is also be available from the parameter file. In future iterations of this template, I plan to call this user defined type from a bicep registry to centralize updates of these static properties. Providing a  re-usable type that can be used to retrieve environment static values helps provide a repeatable pattern of access.   
-
 ### sqlServerSettingType
-This Type contains all the required parameters needed by our template for the SQL Server resource deployment. As I mentioned before, the template focuses on the features of SQL Server for this business case. Ensuring each property has a detailed description helps consumers understand the parameter requirements and options available to them. Our goal is allow consumers to be able to create a new parameter file for a template and complete all the required parameters without reading additional documentation.  
+This Type contains all the parameters needed by our template for the deployment of our SQL Server resource. As I mentioned before, the template focuses on the features of SQL Server for a specific business case. Ensuring each property has a detailed description helps consumers understand the parameter and the potential values available to them. Our goal is to allow consumers to create and complete a new parameter file without reading additional documentation.  
 
 ``` Bicep
 @export()
@@ -280,14 +276,14 @@ type sqlDatabaseSettingType = {
   restorePointInTime: string?
 }[]
 ```
-Again good descriptions and simplified options help the consumers of the the template. A good example of this is the `maintenanceConfigurationId` property. This value is unique resource Id per region. From the users perspective, they only need to choose the back up window. 
+Again good descriptions and simplified options are a great benefit to the consumers of the template. A good example of this is the `maintenanceConfigurationId` property. The value required by the SQL resource is unique resource Id per region ('Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_eastus_DB_1'). The resourceId does not provide meaningful information for the user to determine what value they should choose. To assist the user, we provide them more descriptive options by having them select the name of the maintenance windows that each resourceId represents.
 
 ``` Bicep
 @description('Defines the period when the maintenance updates will occur.')
 maintenanceConfigurationId: 'window_5pm_8am_daily' | 'window_10pm_6am_EST_Monday_Thursday' | 'windows_10pm_6am_EST_Friday_Sunday'
 ```
 
-In the template, we take the value provided and replace it with the value needed for the SQL Database deployment. 
+In the template, the maintenance window names and resource Ids are part of variable object. 
 
 ``` Bicep
 var maintenanceConfigurationId = {
@@ -305,10 +301,14 @@ var maintenanceConfigurationId = {
   )
 }
 ```
-Providing the consumer of the template with simple options where possible helps to minimize questions and confusion when using your template! 
+We can then pass the proper value for the maintenance window using the variable and parameter value provided by the user. 
+``` Bicep
+maintenanceConfigurationId[database.maintenanceConfigurationId]
+```
+Providing descriptive and meaningful options will minimize questions and confusion when using your template!
 
 ### sqlDatabaseSkuOptions
-Now we get into the complex portion of our template. Generally you provide sku information for SQL Databases through properties such as: 
+Now we get into the complex portion of our template. This type was designed to help dynamically provide users the required properties based on the chosen sku for SQL Database. Generally you provide sku information for SQL Databases through properties such as: 
 - skuName
 - skuSize
 - skuCapacity
@@ -323,9 +323,9 @@ These values align with various tiers of Azure SQL DB:
   - General Purpose Provisioned
   - General Purpose Serverless
   
-Each of these tiers have different sku's and potentially different features based on your sku choice. Providing a list of options previously was not possible due the complexity and scale of options available. However, now with User Defined Types, we can bring structure to the chaotic assortment of sku's and options.
+Each of these tiers has multiple sku's and potentially different features based on your sku choice. Previously, there was no way to organize the potential options due to the complexity and quantity of sku's available. However, with User Defined Types and discriminated unions, we can bring structure to the chaotic assortment of sku's and properties.
 
-Below is the top level user defined type that is part of the `sqlDatabaseSettingType`. 
+Below is the top level User Defined Type, `sqlDatabaseSkuOptions` used in the `sqlDatabaseSettingType` to determine what properties are required for a SQL Database based on the sku chosen. 
 
 ``` Bicep
 import { sqlDatabaseSkuBasic, sqlDatabaseSkuStandard, sqlDatabaseSkuPremium } from 'DtuType.bicep'
@@ -339,17 +339,17 @@ type sqlDatabaseSkuOptions = sqlDatabaseSkuBasic | sqlDatabaseSkuStandard
  | sqlDatabaseSkuPremium | sqlDatabaseSkuGeneralPurposeProvisioned | sqlDatabaseSkuGeneralPurposeServerless
 ```
 
-While this type appears simple, there is a great deal of logic and configuration hidden under the covers. The `sqlDatabaseSkuOptions` type is a composition of 5 user defined types:
+While this type appears simple, there is a great deal of logic and configuration hidden under the covers. The `sqlDatabaseSkuOptions` type is a composition of 5 User Defined Types:
 - sqlDatabaseSkuBasic
 - sqlDatabaseSkuStandard
 - sqlDatabaseSkuPremium
 - sqlDatabaseSkuGeneralPurposeProvisioned
 - sqlDatabaseSkuGeneralPurposeServerless
 
-This is accomplished using the `@discriminator()` decorator. User defined types can be combined using a shared property. From the [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/user-defined-data-types#declare-tagged-union-type): 
+This is accomplished using the `@discriminator()` decorator. User Defined Types can be combined using a common property found in each type. From the [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/user-defined-data-types#declare-tagged-union-type): 
 > The discriminator decorator takes a single parameter, which represents a shared property name among all union members. This property name must be a required string literal on all members and is case-sensitive. The values of the discriminated property on the union members must be unique in a case-insensitive manner.
 
-For our type, we use the `type` property. This is found on each user defined type. Lets take a look at at the `sqlDatabaseSkuStandard` type:
+Each of our 5 sku types above have a `type` property that is unique to that sku. This is the first filter used to to choose our sku. Let's take a look at at the `sqlDatabaseSkuStandard` type:
 
 ``` Bicep
 @export()
@@ -361,8 +361,7 @@ type sqlDatabaseSkuStandard = {
 }
 ```
 
-For most sku's, there are 2 required properties, `skuTier` and `skuName`. For all the standard sku's the `skuTier` value is **Standard**. The `SkuName` options are: 
-- S0, S1, S2, S3, S4, S5, S6, S7, S9, S12 ([Standard Service Tier](https://learn.microsoft.com/en-us/azure/azure-sql/database/resource-limits-dtu-single-databases?view=azuresql#standard-service-tier)). So how do we handle all these sku options? Discriminated Unions to the rescue again! The `sku` property is set to the discriminated type `standardDtuType`:
+For most SQL Database sku's, there are 2 required properties, `skuTier` and `skuName`. For all standard sku's, the `skuTier` value is **Standard**. The `SkuName` has 9 options available, one for each ([Standard Service Tier](https://learn.microsoft.com/en-us/azure/azure-sql/database/resource-limits-dtu-single-databases?view=azuresql#standard-service-tier)). Along with `skuName`, there is also a `databaseMaxSize` property that is needed for each standard sku with. To further complicate our decision, skus can have different maximum database sizes. So how do we handle all these sku options? Discriminated Unions to the rescue! We use `dtu` property as the key for the `standardDtuType` discriminated type:
 
 ``` Bicep
 // Unioned Type for Standard Skus
@@ -371,7 +370,8 @@ type standardDtuType = standardDTU10 | standardDTU20 | standardDTU50 | standardD
  | standardDTU400 | standardDTU800 | standardDTU1600 | standardDTU3000
 ```
 
-Each of these Sku's can have different capacities based on the tier such as max DTU and Max Database Storage. To assist consumers of our template, we took the approach of providing relevant information for each sku as part of our User Defined Types. Here is the **standardDTU10** type: 
+Each sku has different capacities such as DTU ([Database Transaction Unit](https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu?view=azuresql#database-transaction-units-dtus)) and potential database sizes. Below is one of the sku types used in the `standardDtuType`:
+
 ``` Bicep
 type standardDTU10 = {
   @description('database transaction unit (DTU)')
@@ -388,46 +388,28 @@ type standardDTU10 = {
   databaseMaxSize: 1 | 2 | 5 | 10 | 20 | 30 | 40 | 50 | 100 | 150 | 200 | 250
 }
 ```
-The `dtu` property is used as the discriminated property in our `standardDtuType` to combine all of our standard sku's into the `sqlDatabaseSkuOptions` Type. `dtu` was chosen as it best represented the deciding factor most consumers would use, the performance level of the sku. The `skuName` property is the actual value passed to our SQL module to choose the correct sku. `DatabaseMaxSize` is the value passed for the storage capacity of the sku. There are set increments of storage that are allowed for the Standard sku's database size. In our parameter file we would see the DB skuOptions listed like this: 
-![A picture of a bicep parameter file showing properties for a SQL Database](./udtia-dbSkuOptions.png)
+The `dtu` property is used as the discriminated property in our `standardDtuType` to combine all of our standard sku options. `dtu` was chosen as it best represented the deciding factor most consumers would use, the performance level of the sku. The `dtu` value is used as friendly type to help provide the user with a better understanding of the sku options. The `skuName` property is the actual value passed to our SQL module to choose the correct sku. `DatabaseMaxSize` is the value passed for the storage capacity of the sku. Standard sku's also include specific step increases for the database size. By providing the user with this information from our template, choosing a sku results in all the required parameters being present. Here is an example of the intellisense provided in a Bicep parameter file using our SQL template. The user is provided meaningful information to determine what sku and required properties are needed for their deployment without needing to leave the parameter file.
 
-*possibly add a gif showing the db intellisense options*
+![](./udtia-newDbCreation.gif)
 
-As the template consumer fills out their parameter file, they will be provided with options and details that will allow most users to be able to select the proper sku for their database. There some considerations with this approach.
+While this improves the user experience for database sku selection, there some considerations with this approach.
 
 Pros
 - Users have convenient access to most required properties to choose a sku.
-- Only valid options are presented to the User.
-- Option values that are Sku Specific are only displayed for those sku's.
+- Only valid options are presented to the user.
+- Option values that are sku specific are only displayed for the appropriate sku.
 
 Cons:
-- Sku's availability is region specific, some sku's may not be available in all regions
-- Testing all sku options can be difficult to automate are part of a CI/CD pipeline.
+- Sku's availability is region specific, some sku's may not be available in all regions.
+- Testing all sku options can be difficult to automate as part of a CI/CD pipeline.
 - For more complex or unique DB deployments, additional guidance may still be needed for Azure Documentation. 
 
-Let's map out our design so far! 
+### Let's map out our design so far!
+Our `sqlDatabaseSkuOptions` type contains the sku tiers defined in 5 types. Each sku tier type contains all the available skus for that tier. Those individual skus will then contain the required properties for deploying that sku.
 
-- sqlDatabaseSkuOptions (discriminated('type'))
-  - sqlDatabaseSkuBasic
-  - sqlDatabaseSkuStandard 
-    - type: 'Standard'
-    - skuTier: 'Standard'
-    - sku: standardDtuType
-      - standardDtuType (discriminated('dtu'))
-        - standardDTU10
-        - standardDTU20
-        - standardDTU50
-        - standardDTU100
-        - standardDTU200
-        - standardDTU400
-        - standardDTU800
-        - standardDTU1600
-        - standardDTU3000
-  - sqlDatabaseSkuPremium
-  - sqlDatabaseSkuGeneralPurposeProvisioned
-  - sqlDatabaseSkuGeneralPurposeServerless
+![](./udtia-unionChart.png)
 
-This strategy, while complex, provides a huge benefit to consumers of our template. Ensuring users can only choose the required and valid options for their sku increases the success of our template deployment. There is no need to go read additional documentation or question which properties are needed for your chosen sku. By dividing the SQL Database sku's into User Defined Types, we are able to create nested types that contain the sku specific options that are **<u>only</u>** presented when the user chooses that sku. 
+This strategy, while complex, provides a huge benefit to consumers of our template. Ensuring users can only choose the required and valid options for their sku increases the success of our template deployment. There is no need to go read additional documentation or question which properties are needed for your chosen sku. By dividing the SQL Database sku tier's into User Defined Types, we are able to create nested types that contain the sku specific options that are **<u>only</u>** presented when the user decides. 
 
 To drive the point home, lets look at the GeneralPurposeProvisioned Type:
 ``` Bicep
@@ -458,17 +440,17 @@ type GP_Gen5_2 = {
 }
 
 ```
-Instead of using `dtu` this discriminated type uses `vCores` for it's joining type. This again helps the user in deciding which tier to use (vCores begin one of the biggest factors). Each sku type has 3 properties:
+Instead of using `dtu`, the `generalPurposeProvisionedType` discriminated union uses `vCores` for it's joining type. This helps the user in deciding which sku to choose based on the performance needed for their deployment (vCores being one of the biggest factors). Each sku type has 3 properties:
 - skuName 
 - databaseMaxSize
 - vCores
 
-Both `skuName` and `databaseMaxSize` are needed for the deployment of the SQL DB, where as `vCores` is only used to provide a user readable convention for choosing the sku they need. `GP_Gen5_2` does not provide a good description for most users. You can also see in this case that the `GP_Gen5_2` type allows any value `databaseMaxSize` instead of set size limits like the Standard Serverless sku we looked at previously. Please continue to investigate the template on my [Github](https://github.com/kevball2/bicep-samples/tree/feat-initial/samples/user-defined-types/complex/templates). Each User Defined Type for each skuTier is slightly different to handle due to specific requirements for that Tier. 
+Both `skuName` and `databaseMaxSize` are needed for the deployment of the SQL DB, whereas `vCores` is only used to provide a user readable convention for choosing the sku they need. `GP_Gen5_2`, while being the required value for deployment, does not provide a good description for most users. You can also see in this case that the `GP_Gen5_2` sku allows any value  for `databaseMaxSize` instead of set size limits like the Standard sku we looked at previously. Each User Defined Type for each sku tier is slightly different to handle the specific requirements of that tier. Please continue to investigate the template on my [GitHub](https://github.com/kevball2/bicep-samples/blob/main/samples/user-defined-types/complex/templates/sql/server/main.bicep) to see the different configurations of the other SQL sku tiers. 
 
 
 ## Conclusion
 
-User Defined Types represent a major change in how we can author Bicep templates and modules. Having the ability to create complex logical types to provide our template easy to digest parameters is a huge win. Removing some of the guess work and confusing parameter requirements from our template and module deployments will go a long way in increasing user adoption. I hope this post has helped you understand the potential of this new feature. 
+User Defined Types represent a major change in how we can author Bicep templates and modules. Having the ability to create complex logical types to provide our template easy to digest parameters is a huge win. Removing some of the guesswork and confusing parameter requirements from our template and module deployments will go a long way in increasing user adoption. I hope this post has helped you understand the potential of this new feature. 
 Happy Coding! 
 
 
