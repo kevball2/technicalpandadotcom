@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="After spending a good deal of time working in depth with User Defined Types at the end of 2023, I want to expand my previous post on the basics of User Defined Types. User Defined Types provide a great new capability as we write Bicep code; it is also a feature that is hard to define it&rsquo;s value until you see it in action. In this post I will walk through a Bicep template I designed to help deploy Azure SQL Databases. This template takes advantage of multiple advanced features and techniques that will bring better understanding and speed to your deployments.\n">
+<title>User Defined Types in Action</title>
+
+<link rel='canonical' href='http://localhost:1313/p/user-defined-types-action/'>
+
+<link rel="stylesheet" href="/scss/style.min.0304c6baf04e01a8fe70693791cb744d56a3578a3120a8796cefc66825aa39c7.css"><meta property='og:title' content="User Defined Types in Action">
+<meta property='og:description' content="After spending a good deal of time working in depth with User Defined Types at the end of 2023, I want to expand my previous post on the basics of User Defined Types. User Defined Types provide a great new capability as we write Bicep code; it is also a feature that is hard to define it&rsquo;s value until you see it in action. In this post I will walk through a Bicep template I designed to help deploy Azure SQL Databases. This template takes advantage of multiple advanced features and techniques that will bring better understanding and speed to your deployments.\n">
+<meta property='og:url' content='http://localhost:1313/p/user-defined-types-action/'>
+<meta property='og:site_name' content='TechnicalPanda'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2024-01-08T13:38:20&#43;00:00'/><meta property='article:modified_time' content='2024-01-08T13:38:20&#43;00:00'/>
+<meta name="twitter:title" content="User Defined Types in Action">
+<meta name="twitter:description" content="After spending a good deal of time working in depth with User Defined Types at the end of 2023, I want to expand my previous post on the basics of User Defined Types. User Defined Types provide a great new capability as we write Bicep code; it is also a feature that is hard to define it&rsquo;s value until you see it in action. In this post I will walk through a Bicep template I designed to help deploy Azure SQL Databases. This template takes advantage of multiple advanced features and techniques that will bring better understanding and speed to your deployments.\n">
+    <link rel="shortcut icon" href="/panda_favicon32.png" />
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu3953948864382434056.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🐼</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">TechnicalPanda</a></h1>
+            <h2 class="site-description">Technologist, teaching through continual incremental improvements.</h2>
+        </div>
+    </header><ol class="menu-social">
+            
+                <li>
+                    <a 
+                        href='https://github.com/kevball2'
+                        target="_blank"
+                        title="GitHub"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a 
+                        href='https://twitter.com'
+                        target="_blank"
+                        title="Twitter"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M22 4.01c-1 .49 -1.98 .689 -3 .99c-1.121 -1.265 -2.783 -1.335 -4.38 -.737s-2.643 2.06 -2.62 3.737v1c-3.245 .083 -6.135 -1.395 -8 -4c0 0 -4.182 7.433 4 11c-1.872 1.247 -3.739 2.088 -6 2c3.308 1.803 6.913 2.423 10.034 1.517c3.58 -1.04 6.522 -3.723 7.651 -7.742a13.84 13.84 0 0 0 .497 -3.753c-.002 -.249 1.51 -2.772 1.818 -4.013z" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/about/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>Search</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>Links</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="http://localhost:1313/zh-cn/" >中文</option>
+                                
+                                    <option value="http://localhost:1313/ar/" >عربي</option>
+                                
+                                    <option value="http://localhost:1313/" selected></option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>Dark Mode</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">Table of contents</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#template-scope-overview">Template Scope overview</a>
+      <ol>
+        <li><a href="#template-components">Template components</a></li>
+      </ol>
+    </li>
+    <li><a href="#user-defined-types">User Defined Types</a>
+      <ol>
+        <li><a href="#azure-environment-type">Azure Environment Type</a></li>
+        <li><a href="#sqlserversettingtype">sqlServerSettingType</a></li>
+        <li><a href="#sqldatabasesettingtype">sqlDatabaseSettingType</a></li>
+        <li><a href="#sqldatabaseskuoptions">sqlDatabaseSkuOptions</a></li>
+        <li><a href="#lets-map-out-our-design-so-far">Let&rsquo;s map out our design so far!</a></li>
+      </ol>
+    </li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/user-defined-types-action/">User Defined Types in Action</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Jan 08, 2024</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    17 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <p>After spending a good deal of time working in depth with User Defined Types at the end of 2023, I want to expand my previous post on the basics of <a class="link" href="../working-user-defined-types-bicep" >User Defined Types</a>. User Defined Types provide a great new capability as we write Bicep code; it is also a feature that is hard to define it&rsquo;s value until you see it in action. In this post I will walk through a Bicep template I designed to help deploy Azure SQL Databases. This template takes advantage of multiple advanced features and techniques that will bring better understanding and speed to your deployments.</p>
+<h2 id="template-scope-overview">Template Scope overview
+</h2><p>Before diving into the Bicep template, I want to explain the design of our Bicep deployment. There are 2 components to our strategy, modules and templates.</p>
+<ul>
+<li>Modules - Generalized resource that contain the logic to successfully deploy the resource</li>
+<li>Templates - Contain the business and security requirements for a deployment</li>
+</ul>
+<p>Modules are generalized Bicep files that target an Azure resource (e.g Azure SQL, Azure Virtual Machine, Virtual Network). These modules are designed to allow for deployment in multiple configurations without altering the module. These are based on the <a class="link" href="https://github.com/Azure/ResourceModules"  target="_blank" rel="noopener"
+    >Azure Resource Modules</a> project. Utilizing a generalized module allows us to abstract away logic and minimize the complexity of the template design by teams.</p>
+<p>Here is an example of logic that would be part of module. The Bicep below checks if the template calling this module has passed any Identity properties.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">var</span><span class="w"> </span><span class="nv">formattedUserAssignedIdentities</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nf">reduce</span><span class="p">(</span><span class="nf">map</span><span class="p">((</span><span class="nv">managedIdentities</span><span class="p">.?</span><span class="nv">userAssignedResourcesIds</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="p">[]),</span><span class="w"> </span><span class="p">(</span><span class="nv">id</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&#39;</span><span class="si">${</span><span class="nv">id</span><span class="si">}</span><span class="s">&#39;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="p">}),</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="p">(</span><span class="nv">cur</span><span class="p">,</span><span class="w"> </span><span class="nv">next</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="nv">cur</span><span class="p">,</span><span class="w"> </span><span class="nv">next</span><span class="p">))</span><span class="w"> </span><span class="c1">// Converts the flat array to an object like { &#39;${id1}&#39;: {}, &#39;${id2}&#39;: {} }</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">var</span><span class="w"> </span><span class="nv">identity</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">!</span><span class="nf">empty</span><span class="p">(</span><span class="nv">managedIdentities</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">type</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="nv">managedIdentities</span><span class="p">.?</span><span class="nv">systemAssigned</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nf">empty</span><span class="p">(</span><span class="nv">managedIdentities</span><span class="p">.?</span><span class="nv">userAssignedResourcesIds</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="s">&#39;SystemAssigned,UserAssigned&#39;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;SystemAssigned&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nf">empty</span><span class="p">(</span><span class="nv">managedIdentities</span><span class="p">.?</span><span class="nv">userAssignedResourcesIds</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="s">&#39;UserAssigned&#39;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">userAssignedIdentities</span><span class="p">:</span><span class="w"> </span><span class="o">!</span><span class="nf">empty</span><span class="p">(</span><span class="nv">formattedUserAssignedIdentities</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="nv">formattedUserAssignedIdentities</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>This abstraction provides several benefits:</p>
+<ul>
+<li>Template designers are not required to develop complex logic to manage parameter and variable input.</li>
+<li>Template parameters are focused on deployment specific information.</li>
+<li>Template development speed can be increased.</li>
+</ul>
+<p>The goal of this strategy is to create templates that require minimal complexity to meet the business requirements for specific deployment scenarios. For example, we have projects that are allowed to host resources with public access, while other projects that have access to on-premise resources are not allowed to have publicly facing resources. The template for public access deployment would have options for public access while the second template would instead require options to ensure traffic is not publicly available.</p>
+<p>Here is snippet of a template that is used to ensure deployments are not publicly available:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">module</span><span class="w"> </span><span class="nv">sqlServer</span><span class="w"> </span><span class="s">&#39;../../modules/sql/server/main.bicep&#39;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;</span><span class="si">${</span><span class="nv">sqlServerName</span><span class="si">}</span><span class="s">-dp&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">params</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlServerName</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">administratorLogin</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlServerConfiguration</span><span class="p">.</span><span class="nv">administratorLogin</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">administratorLoginPassword</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlServerConfiguration</span><span class="p">.</span><span class="nv">administratorLoginPassword</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">administrators</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlServerConfiguration</span><span class="p">.</span><span class="nv">administrators</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">managedIdentities</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlServerConfiguration</span><span class="p">.</span><span class="nv">managedIdentitiesType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">location</span><span class="p">:</span><span class="w"> </span><span class="nv">location</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">lock</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlServerConfiguration</span><span class="p">.?</span><span class="nv">lock</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">publicNetworkAccess</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Disabled&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">restrictOutboundNetworkAccess</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Disabled&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">enableDefaultTelemetry</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">minimalTlsVersion</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1.2&#39;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Templates can meet security and business requirements by limiting the property options available for the user. With this template a user would not be able to enable public network access through misconfiguration of a parameter file. While it is possible for someone to modify the template directly during a PR, the expectation is that this change will be caught during the PR review. If it was missed during the review, then Azure Policy would block the deployment in our environment. Having layers of validation is crucial to ensuring properly configured resources in your deployments.</p>
+<h3 id="template-components">Template components
+</h3><p>Let&rsquo;s review the main components of our <a class="link" href="https://github.com/kevball2/bicep-samples/blob/main/samples/user-defined-types/complex/templates/sql/server/main.bicep"  target="_blank" rel="noopener"
+    >template</a>.</p>
+<p>Our template is organized into sections:</p>
+<ul>
+<li>User Defined Types</li>
+<li>Parameters</li>
+<li>Variables</li>
+<li>Resources</li>
+<li>Modules</li>
+<li>Outputs</li>
+</ul>
+<p>Defining a good structure for your templates can ensure consistent development across multiple teams. Defining structure, formatting, and naming standards allow for faster development and review. I highly recommend developing a style guide for the creation of templates and modules. For this post we will be focusing on the User Defined Types in our template.</p>
+<h2 id="user-defined-types">User Defined Types
+</h2><p>Our template utilizes several User Defined Types to improve usability and discovery of valid parameter values. These types are imported from several files using the <code>compileTimeImports</code> feature:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">import</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">azureEnvironmentType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sqlDatabaseSettingType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sqlServerSettingType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">privateEndpointSubnetType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">convertGigabytesToBytes</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="s">&#39;./types/types.bicep&#39;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>User Defined Types can grow to be quite large. We can move our User Defined Types to separate Bicep files that represent different parts of our template logic. To ensure our main template file does not become difficult to navigate, I have broken out the logic into several files. 1 for the core SQL server, database, and deployment specific types, and 3 for the SQL sku options for the SQL Database. We will learn more about those types later in this post. First lets look at the core User Defined Types.</p>
+<h3 id="azure-environment-type">Azure Environment Type
+</h3><p>The <code>azureEnvironmentType</code> contains information specific to our environments and deployments. It provides static information that can be used to dynamically create or complete resources. The <code>export()</code> decorator makes the type available for import from another Bicep file.
+The <code>sealed()</code> decorator prevents modification of the property values to avoid alterations in the parameter file.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure environment specific configuration settings&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">export</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">sealed</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">azureEnvironmentType</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure US Government specific settings&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">AzureUSGovernment</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Gov Event Hub ResourceIds&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">eventHubName</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">prod</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">qa</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">dev</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Gov supported regions&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">region</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">usgovvirginia</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ugv&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">usgovtexas</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ugt&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Gov Log Analytics ResourceIds&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">workspace</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">prod</span><span class="p">:</span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">qa</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">dev</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Global Private DNS Zones&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">privateEndpointDns</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">sql</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Global specific settings&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">AzureCloud</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Global Event Hub ResourceIds&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">eventHubName</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">prod</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">qa</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">dev</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Global supported regions&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">region</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">eastus</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;eus&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">westus</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;wus&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Global Log Analytics ResourceIds&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">workspace</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">prod</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">qa</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">dev</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure ECM Global Private DNS Zones&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">privateEndpointDns</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="cp">#disable-next-line</span><span class="w"> </span><span class="nv">no</span><span class="o">-</span><span class="nv">hardcoded</span><span class="o">-</span><span class="nv">env</span><span class="o">-</span><span class="nv">urls</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nv">sql</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;resourceId&gt;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>While this information could also be stored in a variable, providing it as a type allows us to add helpful descriptions for consumers of the template. Providing a re-usable type that can be used to retrieve environment static values ensures consistent resource deployments.</p>
+<p>Here is an example of dynamically creating the SQL Server name based on environment and region information found in the <code>azureEnvironmentType</code>:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">var</span><span class="w"> </span><span class="nv">sqlServerName</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#39;sql-</span><span class="si">${</span><span class="nv">projectName</span><span class="si">}</span><span class="s">-</span><span class="si">${</span><span class="nv">deploymentEnvironment</span><span class="si">}</span><span class="s">-</span><span class="si">${</span><span class="nv">azureEnvironment</span><span class="o">!</span><span class="p">[</span><span class="nf">environment</span><span class="p">().</span><span class="nv">name</span><span class="p">].</span><span class="nv">region</span><span class="p">[</span><span class="nv">location</span><span class="p">]</span><span class="si">}</span><span class="s">&#39;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Another example of accessing the private endpoint DNS zone Resource Id found in the hub network subscription:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="nv">privateEndpoints</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nv">subnetResourceId</span><span class="p">:</span><span class="w"> </span><span class="nv">privateEndpointSubnet</span><span class="p">.</span><span class="nv">id</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nv">privateDnsZoneResourceIds</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nv">azureEnvironment</span><span class="o">!</span><span class="p">[</span><span class="nf">environment</span><span class="p">().</span><span class="nv">name</span><span class="p">].</span><span class="nv">privateEndpointDns</span><span class="p">.</span><span class="nv">sql</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">]</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="sqlserversettingtype">sqlServerSettingType
+</h3><p>This Type contains all the parameters needed by our template for the deployment of our SQL Server resource. As I mentioned before, the template focuses on the features of SQL Server for a specific business case. Ensuring each property has a detailed description helps consumers understand the parameter and the potential values available to them. Our goal is to allow consumers to create and complete a new parameter file without reading additional documentation.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="p">@</span><span class="nf">export</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">sqlServerSettingType</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Optional. Admin user name for SQl server&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">administratorLogin</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">secure</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Admin Password for SQL Server&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">administratorLoginPassword</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;The Azure Active Directory administrator of the server. This can only be used at server create time. If used for server update, it will be ignored or it will result in an error. For updates individual APIs will need to be used.&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">administrators</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;\&#39;ActiveDirectory\&#39; is currently the only Type available&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">administratorType</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ActiveDirectory&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Azure Active Directory only Authentication enabled.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">azureADOnlyAuthentication</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Login name of the server administrator.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">login</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Principal Type of the sever administrator&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">principalType</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Application&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;Group&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;User&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;SID (object ID) of the server administrator.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nv">sid</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Tenant ID of the administrator. AzGov | AzGlobal)
+</span></span></span><span class="line"><span class="cl"><span class="s">    tenantId: &#39;</span><span class="nv">AzGovTenantId</span><span class="s">&#39; | &#39;</span><span class="nv">AzGlobalTenantId</span><span class="s">&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s">  }?
+</span></span></span><span class="line"><span class="cl"><span class="s">  lock: lockType
+</span></span></span><span class="line"><span class="cl"><span class="s">  managedIdentitiesType: {
+</span></span></span><span class="line"><span class="cl"><span class="s">    @description(&#39;</span><span class="nv">Optional</span><span class="p">.</span><span class="w"> </span><span class="nv">Enables</span><span class="w"> </span><span class="nv">system</span><span class="w"> </span><span class="nv">assigned</span><span class="w"> </span><span class="nv">managed</span><span class="w"> </span><span class="nv">identity</span><span class="w"> </span><span class="nv">on</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="kd">resource</span><span class="p">.</span><span class="s">&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s">    systemAssigned: bool?
+</span></span></span><span class="line"><span class="cl"><span class="s">    @description(&#39;</span><span class="nv">Optional</span><span class="p">.</span><span class="w"> </span><span class="nv">The</span><span class="w"> </span><span class="kd">resource</span><span class="w"> </span><span class="nf">ID</span><span class="p">(</span><span class="nv">s</span><span class="p">)</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">assign</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="kd">resource</span><span class="p">.</span><span class="s">&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s">    userAssignedResourcesIds: string[]?
+</span></span></span><span class="line"><span class="cl"><span class="s">  }?
+</span></span></span><span class="line"><span class="cl"><span class="s">}
+</span></span></span><span class="line"><span class="cl"><span class="s">
+</span></span></span><span class="line"><span class="cl"><span class="s">@export()
+</span></span></span><span class="line"><span class="cl"><span class="s">@description(&#39;</span><span class="nv">Optional</span><span class="p">.</span><span class="w"> </span><span class="nv">The</span><span class="w"> </span><span class="kd">type</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">lock</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">be</span><span class="w"> </span><span class="nv">applied</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="kd">resource</span><span class="s">&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s">type lockType = {
+</span></span></span><span class="line"><span class="cl"><span class="s">  @description(&#39;</span><span class="nv">Optional</span><span class="p">.</span><span class="w"> </span><span class="nv">Specify</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">lock</span><span class="p">.</span><span class="s">&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s">  name: string?
+</span></span></span><span class="line"><span class="cl"><span class="s">
+</span></span></span><span class="line"><span class="cl"><span class="s">  @description(&#39;</span><span class="nv">Optional</span><span class="p">.</span><span class="w"> </span><span class="nv">Specify</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="kd">type</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">lock</span><span class="p">.</span><span class="s">&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s">  kind: (&#39;</span><span class="nv">CanNotDelete</span><span class="s">&#39; | &#39;</span><span class="nv">ReadOnly</span><span class="s">&#39; | &#39;</span><span class="nv">None</span><span class="s">&#39;)?
+</span></span></span><span class="line"><span class="cl"><span class="s">}?
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="sqldatabasesettingtype">sqlDatabaseSettingType
+</h3><p>This Type defines all the required properties to successfully deploy databases to the SQL server.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="p">@</span><span class="nf">export</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Configuration settings for SQL Database Deployment&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">sqlDatabaseSettingType</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The name of the database&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The name of the SKU, this value is filtered based on the SKU Tier&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">skuOptions</span><span class="p">:</span><span class="w"> </span><span class="nv">sqlDatabaseSkuOptions</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The default database collation is SQL_Latin1_General_CP1_CI_AS&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">collation</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;SQL_Latin1_General_CP1_CI_AS&#39;</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Diagnostic Setting options&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">diagnosticSettings</span><span class="p">:</span><span class="w"> </span><span class="nv">diagnosticSettingType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Optional. Whether or not this database is a ledger database, which means all tables in the database are ledger tables. Note: the value of this property cannot be changed after the database has been created.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">isLedgerOn</span><span class="p">:</span><span class="w"> </span><span class="nv">bool</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The license type to apply for this database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">licenseType</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Defines the period when the maintenance updates will occur.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">maintenanceConfigurationId</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;window_5pm_8am_daily&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;window_10pm_6am_EST_Monday_Thursday&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;windows_10pm_6am_EST_Friday_Sunday&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Optional. The name of the sample schema to apply when creating this database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sampleName</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">tags</span><span class="p">:</span><span class="w"> </span><span class="nv">object</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The Elastic Pools to create with the server.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">elasticPoolId</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">enableDefaultTelemetry</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;Optional. The storage account type to be used to store backups for this database.&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">requestedBackupStorageRedundancy</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Local&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;Zone&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Optional. The short term backup retention policy to create for the database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">backupShortTermRetentionPolicy</span><span class="p">:</span><span class="w"> </span><span class="nv">object</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Optional. The long term backup retention policy to create for the database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">backupLongTermRetentionPolicy</span><span class="p">:</span><span class="w"> </span><span class="nv">object</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s">  Specifies the mode of database creation.
+</span></span></span><span class="line"><span class="cl"><span class="s">  Default: regular database creation.
+</span></span></span><span class="line"><span class="cl"><span class="s">  Copy: creates a database as a copy of an existing database. sourceDatabaseId must be specified as the resource ID of the source database.
+</span></span></span><span class="line"><span class="cl"><span class="s">  Secondary: creates a database as a secondary replica of an existing database. sourceDatabaseId must be specified as the resource ID of the existing primary database.
+</span></span></span><span class="line"><span class="cl"><span class="s">  PointInTimeRestore: Creates a database by restoring a point in time backup of an existing database. sourceDatabaseId must be specified as the resource ID of the existing database, and restorePointInTime must be specified.
+</span></span></span><span class="line"><span class="cl"><span class="s">  Recovery: Creates a database by restoring a geo-replicated backup. sourceDatabaseId must be specified as the recoverable database resource ID to restore.
+</span></span></span><span class="line"><span class="cl"><span class="s">  Restore: Creates a database by restoring a backup of a deleted database. sourceDatabaseId must be specified. If sourceDatabaseId is the database&#39;</span><span class="nv">s</span><span class="w"> </span><span class="nv">original</span><span class="w"> </span><span class="kd">resource</span><span class="w"> </span><span class="nv">ID</span><span class="p">,</span><span class="w"> </span><span class="nv">then</span><span class="w"> </span><span class="nv">sourceDatabaseDeletionDate</span><span class="w"> </span><span class="nv">must</span><span class="w"> </span><span class="nv">be</span><span class="w"> </span><span class="nv">specified</span><span class="p">.</span><span class="w"> </span><span class="nv">Otherwise</span><span class="w"> </span><span class="nv">sourceDatabaseId</span><span class="w"> </span><span class="nv">must</span><span class="w"> </span><span class="nv">be</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">restorable</span><span class="w"> </span><span class="nv">dropped</span><span class="w"> </span><span class="nv">database</span><span class="w"> </span><span class="kd">resource</span><span class="w"> </span><span class="nv">ID</span><span class="w"> </span><span class="nv">and</span><span class="w"> </span><span class="nv">sourceDatabaseDeletionDate</span><span class="w"> </span><span class="nv">is</span><span class="w"> </span><span class="nv">ignored</span><span class="p">.</span><span class="w"> </span><span class="nv">restorePointInTime</span><span class="w"> </span><span class="nv">may</span><span class="w"> </span><span class="nv">also</span><span class="w"> </span><span class="nv">be</span><span class="w"> </span><span class="nv">specified</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">restore</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">an</span><span class="w"> </span><span class="nv">earlier</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="kd">in</span><span class="w"> </span><span class="nv">time</span><span class="p">.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">RestoreLongTermRetentionBackup</span><span class="p">:</span><span class="w"> </span><span class="nv">Creates</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">database</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">restoring</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">long</span><span class="w"> </span><span class="nv">term</span><span class="w"> </span><span class="nv">retention</span><span class="w"> </span><span class="nv">vault</span><span class="p">.</span><span class="w"> </span><span class="nv">recoveryServicesRecoveryPointResourceId</span><span class="w"> </span><span class="nv">must</span><span class="w"> </span><span class="nv">be</span><span class="w"> </span><span class="nv">specified</span><span class="w"> </span><span class="kd">as</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">recovery</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="kd">resource</span><span class="w"> </span><span class="nv">ID</span><span class="p">.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">Copy</span><span class="p">,</span><span class="w"> </span><span class="nv">Secondary</span><span class="p">,</span><span class="w"> </span><span class="nv">and</span><span class="w"> </span><span class="nv">RestoreLongTermRetentionBackup</span><span class="w"> </span><span class="nv">are</span><span class="w"> </span><span class="nv">not</span><span class="w"> </span><span class="nv">supported</span><span class="w"> </span><span class="kd">for</span><span class="w"> </span><span class="nv">DataWarehouse</span><span class="w"> </span><span class="nv">edition</span><span class="p">.</span><span class="s">&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s">  &#39;&#39;&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">createMode</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Default&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The resource identifier of the source database associated with create operation of this database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sourceDatabaseResourceId</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Specifies the time that the database was deleted.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sourceDatabaseDeletionDate</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The resource identifier of the recovery point associated with create operation of this database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">recoveryServicesRecoveryPointResourceId</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Specifies the point in time (ISO8601 format) of the source database that will be restored to create the new database.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">restorePointInTime</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p">?</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}[]</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Again good descriptions and simplified options are a great benefit to the consumers of the template. A good example of this is the <code>maintenanceConfigurationId</code> property. The value required by the SQL resource is unique resource Id per region (&lsquo;Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_eastus_DB_1&rsquo;). The resourceId does not provide meaningful information for the user to determine what value they should choose. To assist the user, we provide them more descriptive options by having them select the name of the maintenance windows that each resourceId represents.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Defines the period when the maintenance updates will occur.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nv">maintenanceConfigurationId</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;window_5pm_8am_daily&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;window_10pm_6am_EST_Monday_Thursday&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s">&#39;windows_10pm_6am_EST_Friday_Sunday&#39;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>In the template, the maintenance window names and resource Ids are part of variable object.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">var</span><span class="w"> </span><span class="nv">maintenanceConfigurationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">window_5pm_8am_daily</span><span class="p">:</span><span class="w"> </span><span class="nf">subscriptionResourceId</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;Microsoft.Maintenance/publicMaintenanceConfigurations&#39;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;SQL_Default&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">window_10pm_6am_EST_Monday_Thursday</span><span class="p">:</span><span class="w"> </span><span class="nf">subscriptionResourceId</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;Microsoft.Maintenance/publicMaintenanceConfigurations&#39;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;SQL_</span><span class="si">${</span><span class="nv">location</span><span class="si">}</span><span class="s">_DB_1&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">window_10pm_6am_EST_Friday_Sunday</span><span class="p">:</span><span class="w"> </span><span class="nf">subscriptionResourceId</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;Microsoft.Maintenance/publicMaintenanceConfigurations&#39;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;SQL_</span><span class="si">${</span><span class="nv">location</span><span class="si">}</span><span class="s">_DB_1&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>We can then pass the proper value for the maintenance window using the variable and parameter value provided by the user.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="nv">maintenanceConfigurationId</span><span class="p">[</span><span class="nv">database</span><span class="p">.</span><span class="nv">maintenanceConfigurationId</span><span class="p">]</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Providing descriptive and meaningful options will minimize questions and confusion when using your template!</p>
+<h3 id="sqldatabaseskuoptions">sqlDatabaseSkuOptions
+</h3><p>Now we get into the complex portion of our template. This type was designed to help dynamically provide users the required properties based on the chosen sku for SQL Database. Generally you provide sku information for SQL Databases through properties such as:</p>
+<ul>
+<li>skuName</li>
+<li>skuSize</li>
+<li>skuCapacity</li>
+<li>skuFamily</li>
+</ul>
+<p>These values align with various tiers of Azure SQL DB:</p>
+<ul>
+<li>DTU
+<ul>
+<li>Basic</li>
+<li>Standard</li>
+<li>Premium</li>
+</ul>
+</li>
+<li>vCore
+<ul>
+<li>General Purpose Provisioned</li>
+<li>General Purpose Serverless</li>
+</ul>
+</li>
+</ul>
+<p>Each of these tiers has multiple sku&rsquo;s and potentially different features based on your sku choice. Previously, there was no way to organize the potential options due to the complexity and quantity of sku&rsquo;s available. However, with User Defined Types and discriminated unions, we can bring structure to the chaotic assortment of sku&rsquo;s and properties.</p>
+<p>Below is the top level User Defined Type, <code>sqlDatabaseSkuOptions</code> used in the <code>sqlDatabaseSettingType</code> to determine what properties are required for a SQL Database based on the sku chosen.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">sqlDatabaseSkuBasic</span><span class="p">,</span><span class="w"> </span><span class="nv">sqlDatabaseSkuStandard</span><span class="p">,</span><span class="w"> </span><span class="nv">sqlDatabaseSkuPremium</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="s">&#39;DtuType.bicep&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">sqlDatabaseSkuGeneralPurposeProvisioned</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="s">&#39;generalPurposeProvisionedType.bicep&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">sqlDatabaseSkuGeneralPurposeServerless</span><span class="p">}</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="s">&#39;generalPurposeServerlessType.bicep&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// SQL SKUs Type</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">sealed</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">discriminator</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">sqlDatabaseSkuOptions</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nv">sqlDatabaseSkuBasic</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">sqlDatabaseSkuStandard</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">sqlDatabaseSkuPremium</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">sqlDatabaseSkuGeneralPurposeProvisioned</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">sqlDatabaseSkuGeneralPurposeServerless</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>While this type appears simple, there is a great deal of logic and configuration hidden under the covers. The <code>sqlDatabaseSkuOptions</code> type is a composition of 5 User Defined Types:</p>
+<ul>
+<li>sqlDatabaseSkuBasic</li>
+<li>sqlDatabaseSkuStandard</li>
+<li>sqlDatabaseSkuPremium</li>
+<li>sqlDatabaseSkuGeneralPurposeProvisioned</li>
+<li>sqlDatabaseSkuGeneralPurposeServerless</li>
+</ul>
+<p>This is accomplished using the <code>@discriminator()</code> decorator. User Defined Types can be combined using a common property found in each type. From the <a class="link" href="https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/user-defined-data-types#declare-tagged-union-type"  target="_blank" rel="noopener"
+    >Bicep documentation</a>:</p>
+<blockquote>
+<p>The discriminator decorator takes a single parameter, which represents a shared property name among all union members. This property name must be a required string literal on all members and is case-sensitive. The values of the discriminated property on the union members must be unique in a case-insensitive manner.</p>
+</blockquote>
+<p>Each of our 5 sku types above have a <code>type</code> property that is unique to that sku. This is the first filter used to to choose our sku. Let&rsquo;s take a look at at the <code>sqlDatabaseSkuStandard</code> type:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="p">@</span><span class="nf">export</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">sqlDatabaseSkuStandard</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">type</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Standard&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">skuTier</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Standard&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;The Standard SKU of the SQL Server you want to deploy.&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sku</span><span class="p">:</span><span class="w"> </span><span class="nv">standardDtuType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>For most SQL Database sku&rsquo;s, there are 2 required properties, <code>skuTier</code> and <code>skuName</code>. For all standard sku&rsquo;s, the <code>skuTier</code> value is <strong>Standard</strong>. The <code>SkuName</code> has 9 options available, one for each (<a class="link" href="https://learn.microsoft.com/en-us/azure/azure-sql/database/resource-limits-dtu-single-databases?view=azuresql#standard-service-tier"  target="_blank" rel="noopener"
+    >Standard Service Tier</a>). Along with <code>skuName</code>, there is also a <code>databaseMaxSize</code> property that is needed for each standard sku with. To further complicate our decision, skus can have different maximum database sizes. So how do we handle all these sku options? Discriminated Unions to the rescue! We use <code>dtu</code> property as the key for the <code>standardDtuType</code> discriminated type:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="c1">// Unioned Type for Standard Skus</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">discriminator</span><span class="p">(</span><span class="s">&#39;dtu&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">standardDtuType</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nv">standardDTU10</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU20</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU50</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU100</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU200</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU400</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU800</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU1600</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">standardDTU3000</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Each sku has different capacities such as DTU (<a class="link" href="https://learn.microsoft.com/en-us/azure/azure-sql/database/service-tiers-dtu?view=azuresql#database-transaction-units-dtus"  target="_blank" rel="noopener"
+    >Database Transaction Unit</a>) and potential database sizes. Below is one of the sku types used in the <code>standardDtuType</code>:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nv">standardDTU10</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;database transaction unit (DTU)&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">dtu</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;NOTE: Standard S0, S1 and S2 tiers provide less than one vCore (CPU). For resource-intensive workloads, a service tier of S3 or greater is recommended. &#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">skuName</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;S0&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">maxValue</span><span class="p">(</span><span class="nv">250</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">minValue</span><span class="p">(</span><span class="nv">1</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;Max size for 10 DTUs is 250 GB. Data Storage for S0 uses HDD based storage media best suited for development and testing.&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">databaseMaxSize</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">2</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">5</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">10</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">20</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">30</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">40</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">50</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">100</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">150</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">200</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">250</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>The <code>dtu</code> property is used as the discriminated property in our <code>standardDtuType</code> to combine all of our standard sku options. <code>dtu</code> was chosen as it best represented the deciding factor most consumers would use, the performance level of the sku. The <code>dtu</code> value is used as friendly type to help provide the user with a better understanding of the sku options. The <code>skuName</code> property is the actual value passed to our SQL module to choose the correct sku. <code>DatabaseMaxSize</code> is the value passed for the storage capacity of the sku. Standard sku&rsquo;s also include specific step increases for the database size. By providing the user with this information from our template, choosing a sku results in all the required parameters being present. Here is an example of the intellisense provided in a Bicep parameter file using our SQL template. The user is provided meaningful information to determine what sku and required properties are needed for their deployment without needing to leave the parameter file.</p>
+<p><img src="/udtia-newDbCreation.gif"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>While this improves the user experience for database sku selection, there some considerations with this approach.</p>
+<p>Pros</p>
+<ul>
+<li>Users have convenient access to most required properties to choose a sku.</li>
+<li>Only valid options are presented to the user.</li>
+<li>Option values that are sku specific are only displayed for the appropriate sku.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Sku&rsquo;s availability is region specific, some sku&rsquo;s may not be available in all regions.</li>
+<li>Testing all sku options can be difficult to automate as part of a CI/CD pipeline.</li>
+<li>For more complex or unique DB deployments, additional guidance may still be needed for Azure Documentation.</li>
+</ul>
+<h3 id="lets-map-out-our-design-so-far">Let&rsquo;s map out our design so far!
+</h3><p>Our <code>sqlDatabaseSkuOptions</code> type contains the sku tiers defined in 5 types. Each sku tier type contains all the available skus for that tier. Those individual skus will then contain the required properties for deploying that sku.</p>
+<p><img src="/udtia-unionChart.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>This strategy, while complex, provides a huge benefit to consumers of our template. Ensuring users can only choose the required and valid options for their sku increases the success of our template deployment. There is no need to go read additional documentation or question which properties are needed for your chosen sku. By dividing the SQL Database sku tier&rsquo;s into User Defined Types, we are able to create nested types that contain the sku specific options that are <strong><u>only</u></strong> presented when the user decides.</p>
+<p>To drive the point home, lets look at the GeneralPurposeProvisioned Type:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-Bicep" data-lang="Bicep"><span class="line"><span class="cl"><span class="p">@</span><span class="nf">export</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">sqlDatabaseSkuGeneralPurposeProvisioned</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">type</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;GeneralPurposeProvisioned&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">skuTier</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;GeneralPurpose&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#39;The General Purpose Provisioned Tier of the SQL Server you want to deploy.&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">sku</span><span class="p">:</span><span class="w"> </span><span class="nv">generalPurposeProvisionedType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">discriminator</span><span class="p">(</span><span class="s">&#39;vCores&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">generalPurposeProvisionedType</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nv">GP_Gen5_2</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_4</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_6</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_8</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_10</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_12</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_14</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_16</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_18</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_20</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_24</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_32</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_40</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">GP_Gen5_80</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">@</span><span class="nf">sealed</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nv">GP_Gen5_2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;General Purpose Provisioned Tier SKU Name&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">skuName</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;GP_Gen5_2&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">maxValue</span><span class="p">(</span><span class="nv">1024</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">minValue</span><span class="p">(</span><span class="nv">1</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;Max data storage size is 1024 GB&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">databaseMaxSize</span><span class="p">:</span><span class="w"> </span><span class="nv">int</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">@</span><span class="nf">description</span><span class="p">(</span><span class="s">&#39;2 vCores assigned with SKU GP_Gen5_2 &#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nv">vCores</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>Instead of using <code>dtu</code>, the <code>generalPurposeProvisionedType</code> discriminated union uses <code>vCores</code> for it&rsquo;s joining type. This helps the user in deciding which sku to choose based on the performance needed for their deployment (vCores being one of the biggest factors). Each sku type has 3 properties:</p>
+<ul>
+<li>skuName</li>
+<li>databaseMaxSize</li>
+<li>vCores</li>
+</ul>
+<p>Both <code>skuName</code> and <code>databaseMaxSize</code> are needed for the deployment of the SQL DB, whereas <code>vCores</code> is only used to provide a user readable convention for choosing the sku they need. <code>GP_Gen5_2</code>, while being the required value for deployment, does not provide a good description for most users. You can also see in this case that the <code>GP_Gen5_2</code> sku allows any value  for <code>databaseMaxSize</code> instead of set size limits like the Standard sku we looked at previously. Each User Defined Type for each sku tier is slightly different to handle the specific requirements of that tier. Please continue to investigate the template on my <a class="link" href="https://github.com/kevball2/bicep-samples/blob/main/samples/user-defined-types/complex/templates/sql/server/main.bicep"  target="_blank" rel="noopener"
+    >GitHub</a> to see the different configurations of the other SQL sku tiers.</p>
+<h2 id="conclusion">Conclusion
+</h2><p>User Defined Types represent a major change in how we can author Bicep templates and modules. Having the ability to create complex logical types to provide our template easy to digest parameters is a huge win. Removing some of the guesswork and confusing parameter requirements from our template and module deployments will go a long way in increasing user adoption. I hope this post has helped you understand the potential of this new feature.
+Happy Coding!</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    <div class="disqus-container">
+    <div id="disqus_thread"></div>
+<script>
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hugo-theme-stack" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
+    }
+</style>
+
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2025 TechnicalPanda
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.26.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

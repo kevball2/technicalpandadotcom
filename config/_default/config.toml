@@ -1,24 +1,18 @@
-# set `baseurl` to your root domain
-# if you set it to "/" share icons won't work properly on production
-baseurl = "https://www.technicalpanda.com/"  # Include trailing slash
-# title = "Clarity"  # Edit directly from config/_default/languages.toml # alternatively, uncomment this and remove `title` entry from the aforemention file.
-copyright = "Copyright © 2008–2018, Steve Francia and the Hugo Authors; all rights reserved."
-# canonifyurls = true
-paginate = 10
-theme = ["github.com/chipzoller/hugo-clarity"]
-disqusShortname = ""
+# Change baseurl before deploy
+baseurl = "https://demo.stack.jimmycai.com"
+languageCode = "en-us"
+paginate = 5
+title = "TechnicalPanda"
 
-DefaultContentLanguage = "en"
-# [languages]
-# config/_default/languages.toml
+theme = ["hugo-notice", "hugo-theme-stack"]
 
-# [menus]
-# config/_default/menus/menu.xx.toml
+# Theme i18n support
+# Available values: en, fr, id, ja, ko, pt-br, zh-cn, zh-tw, es, de, nl, it, th, el, uk, ar
+defaultContentLanguage = "en"
 
-[taxonomies]
-category = "categories"
-tag = "tags"
-series = "series"
+# Set hasCJKLanguage to true if DefaultContentLanguage is in [zh-cn ja ko]
+# This will make .Summary and .WordCount behave correctly for CJK languages.
+hasCJKLanguage = false
 
-[outputs]
-home = ["HTML", "RSS", "JSON"]
+# Change it to your Disqus shortname before using
+disqusShortname = "hugo-theme-stack"
