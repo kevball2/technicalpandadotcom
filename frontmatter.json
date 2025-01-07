@@ -46,22 +46,5 @@
       ]
     }
   ],
-  "frontMatter.content.pageFolders": [
-    {
-      "title": "content",
-      "path": "[[workspace]]/content/post"
-    },
-    {
-      "title": "homepage",
-      "path": "[[workspace]]/content/homepage"
-    },
-    {
-      "title": "archetypes",
-      "path": "[[workspace]]/archetypes"
-    },
-    {
-      "title": "data",
-      "path": "[[workspace]]/data"
-    }
-  ]
+  "frontMatter.content.pageFolders": []
 }
